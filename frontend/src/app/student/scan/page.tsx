@@ -32,48 +32,50 @@ export default function ScanPage() {
     }
   }, [user, router]);
 
-  const startScanner = async () => {
-    setResult(null);
+  useEffect(() => {
+    let mounted = true;
 
-    try {
+    if (scanning) {
       const scanner = new Html5Qrcode("qr-reader");
       scannerRef.current = scanner;
 
-      await scanner.start(
+      scanner.start(
         { facingMode: "environment" },
-        {
-          fps: 10,
-          qrbox: { width: 280, height: 280 },
-        },
+        { fps: 10, qrbox: { width: 280, height: 280 } },
         async (decodedText) => {
-          // Stop scanning immediately
-          await scanner.stop();
+          if (!mounted) return;
+          // Stop scanning immediately and handle result
           setScanning(false);
           await handleScan(decodedText);
         },
-        () => {} // ignore errors during scanning
-      );
-
-      setScanning(true);
-    } catch (err) {
-      console.error("Scanner error:", err);
-      setResult({
-        status: "error",
-        message: "Camera Access Denied",
-        details: "Please allow camera access to scan QR codes.",
+        () => {} // ignore frame errors
+      ).catch(err => {
+        if (!mounted) return;
+        console.error("Scanner error:", err);
+        setScanning(false);
+        setResult({
+          status: "error",
+          message: "Camera Access Denied",
+          details: "Please allow camera access and ensure no other app is using it.",
+        });
       });
     }
+
+    return () => {
+      mounted = false;
+      if (scannerRef.current) {
+        scannerRef.current.stop().catch(() => {});
+        scannerRef.current = null;
+      }
+    };
+  }, [scanning]);
+
+  const startScanner = () => {
+    setResult(null);
+    setScanning(true);
   };
 
-  const stopScanner = async () => {
-    if (scannerRef.current) {
-      try {
-        await scannerRef.current.stop();
-      } catch (e) {
-        // ignore
-      }
-      scannerRef.current = null;
-    }
+  const stopScanner = () => {
     setScanning(false);
   };
 
@@ -160,14 +162,16 @@ export default function ScanPage() {
             gap: "24px",
           }}
         >
-          {/* Permanent Scanner Div */}
-          <div 
-            className="scanner-wrapper" 
-            style={{ display: scanning ? "block" : "none", width: "100%", position: "relative" }}
-          >
-            <div id="qr-reader" style={{ width: "100%", height: "280px", overflow: "hidden", borderRadius: "20px" }} />
-            {scanning && <div className="scanner-line" />}
-          </div>
+          {/* Scanner Div */}
+          {scanning && (
+            <div 
+              className="scanner-wrapper" 
+              style={{ width: "100%", position: "relative" }}
+            >
+              <div id="qr-reader" style={{ width: "100%", overflow: "hidden", borderRadius: "20px" }} />
+              <div className="scanner-line" />
+            </div>
+          )}
 
           {!scanning ? (
             <>
