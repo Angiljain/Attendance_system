@@ -1,0 +1,69 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+
+
+
+model Student {
+  id            String       @id @default(uuid())
+  name          String
+  email         String       @unique
+  passwordHash  String
+  walletAddress String?
+  role          String       @default("STUDENT")
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  attendance    Attendance[]
+}
+
+model Session {
+  id          String       @id @default(uuid())
+  name        String
+  startTime   DateTime     @default(now())
+  endTime     DateTime?
+  locationLat Float
+  locationLng Float
+  active      Boolean      @default(true)
+  createdBy   String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  attendance  Attendance[]
+  qrLogs      QRLog[]
+}
+
+model Attendance {
+  id        String           @id @default(uuid())
+  studentId String
+  sessionId String
+  timestamp DateTime         @default(now())
+  lat       Float
+  lng       Float
+  status    String
+  txHash    String?
+  nftTokenId String?
+  createdAt DateTime         @default(now())
+
+  student   Student @relation(fields: [studentId], references: [id])
+  session   Session @relation(fields: [sessionId], references: [id])
+
+  @@unique([studentId, sessionId])
+}
+
+model QRLog {
+  id        String   @id @default(uuid())
+  sessionId String
+  payload   String
+  signature String
+  createdAt DateTime @default(now())
+  usedAt    DateTime?
+  usedBy    String?
+
+  session   Session @relation(fields: [sessionId], references: [id])
+}
