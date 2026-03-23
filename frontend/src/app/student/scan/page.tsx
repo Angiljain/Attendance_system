@@ -160,6 +160,15 @@ export default function ScanPage() {
             gap: "24px",
           }}
         >
+          {/* Permanent Scanner Div */}
+          <div 
+            className="scanner-wrapper" 
+            style={{ display: scanning ? "block" : "none", width: "100%", position: "relative" }}
+          >
+            <div id="qr-reader" style={{ width: "100%", height: "280px", overflow: "hidden", borderRadius: "20px" }} />
+            {scanning && <div className="scanner-line" />}
+          </div>
+
           {!scanning ? (
             <>
               <div
@@ -185,24 +194,14 @@ export default function ScanPage() {
               </button>
             </>
           ) : (
-            <>
-              <div className="scanner-wrapper">
-                <div id="qr-reader" style={{ width: "100%", height: "100%" }} />
-                <div className="scanner-line" />
-              </div>
-
-              <button
-                className="btn-danger"
-                onClick={stopScanner}
-                style={{ width: "100%" }}
-              >
-                ⏹ Stop Scanner
-              </button>
-            </>
+            <button
+              className="btn-danger"
+              onClick={stopScanner}
+              style={{ width: "100%", marginTop: "8px" }}
+            >
+              ⏹ Stop Scanner
+            </button>
           )}
-
-          {/* Hidden div for scanner */}
-          {!scanning && <div id="qr-reader" style={{ display: "none" }} />}
         </div>
 
         {/* Loading */}
